@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0C1410">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="مونديال ٢٠٢٦">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<title>متنبئ مونديال ٢٠٢٦</title>
+<style>
+:root{
+  --bg:#0C1410; --surface:#141F18; --surface2:#1A2820; --line:#26382E;
+  --ink:#EDF3EE; --muted:#8CA496; --faint:#5E7468;
+  --gold:#E3BE56; --gold-dim:#8a7434; --green:#41B873; --green-dim:#1E5237;
+  --red:#D07A6A; --amber:#D9A441;
+  --r:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{font-size:16px}
+body{
+  background:var(--bg); color:var(--ink); min-height:100vh;
+  font-family:"SF Arabic","Segoe UI","Noto Naskh Arabic UI","Noto Sans Arabic",Tahoma,system-ui,sans-serif;
+  line-height:1.55;
+}
+.wrap{max-width:600px;margin:0 auto;padding:0 12px 90px}
+/* ===== الترويسة ===== */
+header{position:sticky;top:0;z-index:30;background:linear-gradient(var(--bg) 78%,transparent);padding:14px 0 6px}
+.brand{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:0 2px}
+.brand h1{font-size:1.25rem;font-weight:800;letter-spacing:-.01em}
+.brand h1 .gold{color:var(--gold)}
+.prog{font-size:.8rem;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.prog b{color:var(--ink)}
+nav{display:flex;gap:8px;overflow-x:auto;padding:10px 2px 8px;scrollbar-width:none}
+nav::-webkit-scrollbar{display:none}
+.chip{
+  flex:0 0 auto;border:1px solid var(--line);background:var(--surface);color:var(--muted);
+  padding:8px 14px;border-radius:999px;font-size:.85rem;font-weight:600;cursor:pointer;white-space:nowrap;
+}
+.chip.active{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.chip.locked{opacity:.45}
+.chip .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);margin-inline-start:6px;vertical-align:1px}
+/* ===== بطاقات عامة ===== */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);margin:12px 0;overflow:hidden}
+.card-h{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--line)}
+.card-h h2{font-size:1rem;font-weight:800}
+.card-h .sub{font-size:.75rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.note{font-size:.8rem;color:var(--muted);padding:10px 14px;border-top:1px dashed var(--line)}
+.hint{font-size:.8rem;color:var(--muted);padding:6px 4px 2px;text-align:center}
+/* ===== صف مباراة المجموعات ===== */
+.mdlbl{font-size:.72rem;color:var(--faint);padding:8px 14px 0;font-weight:700;letter-spacing:.04em}
+.match{display:flex;align-items:center;gap:6px;padding:10px 10px}
+.match+.match{border-top:1px solid var(--line)}
+.team{flex:1;min-width:0;display:flex;align-items:center;gap:7px;font-size:.9rem;font-weight:600}
+.team.away{flex-direction:row-reverse;text-align:left}
+.team .flag{font-size:1.35rem;line-height:1}
+.team .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.scorebox{display:flex;align-items:center;gap:4px}
+.stp{display:flex;flex-direction:column;align-items:center;gap:2px}
+.stp button{
+  width:42px;height:30px;border:none;border-radius:8px;background:var(--surface2);color:var(--muted);
+  font-size:1.05rem;font-weight:800;cursor:pointer;touch-action:manipulation;
+}
+.stp button:active{background:var(--green-dim);color:var(--ink)}
+.num{
+  width:42px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:9px;
+  font-size:1.2rem;font-weight:800;font-variant-numeric:tabular-nums;cursor:pointer;
+  border:1.5px dashed var(--line);color:var(--faint);
+}
+.match.touched .num{border:1.5px solid var(--green-dim);color:var(--ink);background:var(--surface2)}
+.colon{color:var(--faint);font-weight:800;padding:0 1px}
+/* ===== جدول الترتيب ===== */
+table{width:100%;border-collapse:collapse;font-size:.8rem;font-variant-numeric:tabular-nums}
+th,td{padding:7px 6px;text-align:center;border-top:1px solid var(--line)}
+th{color:var(--faint);font-size:.68rem;font-weight:700}
+td.tn{text-align:right;font-weight:700;white-space:nowrap}
+tr.q1 td:first-child,tr.q2 td:first-child{box-shadow:inset 3px 0 0 var(--green)}
+tr.q3 td:first-child{box-shadow:inset 3px 0 0 var(--amber)}
+tr.q4{opacity:.5}
+td.pts{font-weight:800;color:var(--ink)}
+/* ===== الثوالث ===== */
+.t3row{display:flex;align-items:center;gap:10px;padding:10px 14px;font-size:.9rem}
+.t3row+.t3row{border-top:1px solid var(--line)}
+.t3row .rank{width:22px;color:var(--faint);font-weight:800;font-variant-numeric:tabular-nums}
+.t3row .meta{margin-inline-start:auto;color:var(--muted);font-size:.75rem;font-variant-numeric:tabular-nums;white-space:nowrap}
+.badge{font-size:.68rem;font-weight:800;padding:3px 9px;border-radius:999px}
+.badge.in{background:var(--green-dim);color:#9FE8C0}
+.badge.out{background:#3a2723;color:var(--red)}
+.t3row.out{opacity:.55}
+/* ===== حسم التعادل ===== */
+.tiebox{background:#2a2110;border:1px solid var(--gold-dim);border-radius:var(--r);margin:12px 0;padding:12px 14px}
+.tiebox h3{font-size:.9rem;color:var(--gold);margin-bottom:4px}
+.tiebox p{font-size:.78rem;color:var(--muted);margin-bottom:10px}
+.tiebox .opts{display:flex;flex-wrap:wrap;gap:8px}
+.tiebox .opt{
+  border:1px solid var(--gold-dim);background:transparent;color:var(--ink);border-radius:10px;
+  padding:8px 12px;font-size:.85rem;font-weight:700;cursor:pointer;
+}
+.tiebox .opt.picked{background:var(--gold);color:#241c08;border-color:var(--gold)}
+.tiebox .opt .ord{font-size:.7rem;font-weight:800;margin-inline-start:5px}
+.tiebox .reset{margin-top:10px;background:none;border:none;color:var(--muted);font-size:.75rem;cursor:pointer;text-decoration:underline}
+/* ===== الأدوار الإقصائية ===== */
+.ko{padding:12px}
+.ko .src{font-size:.7rem;color:var(--faint);margin-bottom:6px;display:flex;justify-content:space-between}
+.ko .vs{display:flex;flex-direction:column;gap:8px}
+.kteam{
+  display:flex;align-items:center;gap:10px;padding:12px 14px;border:1.5px solid var(--line);
+  border-radius:11px;background:var(--surface2);cursor:pointer;font-size:.95rem;font-weight:700;
+}
+.kteam .flag{font-size:1.5rem}
+.kteam .chk{margin-inline-start:auto;color:var(--green);font-weight:900;opacity:0}
+.kteam.win{border-color:var(--green);background:var(--green-dim)}
+.kteam.win .chk{opacity:1}
+.kteam.lose{opacity:.45}
+.kteam:disabled{cursor:default}
+.mnum{font-size:.72rem;color:var(--faint);font-weight:800}
+/* ===== البطل ===== */
+.champ{
+  text-align:center;padding:34px 16px;border-radius:var(--r);margin:14px 0;
+  background:radial-gradient(circle at 50% 0%,#3a2f12,var(--surface) 75%);border:1px solid var(--gold-dim);
+}
+.champ .cup{font-size:2.6rem}
+.champ .flag{font-size:3.4rem;display:block;margin:8px 0 2px}
+.champ h2{font-size:1.5rem;color:var(--gold);font-weight:900}
+.champ p{color:var(--muted);font-size:.85rem;margin-top:4px}
+/* ===== الشجرة ===== */
+.tree .stage-t{font-size:.78rem;color:var(--gold);font-weight:800;padding:12px 14px 4px}
+.tree .ln{display:flex;align-items:center;gap:8px;padding:7px 14px;font-size:.85rem}
+.tree .ln+.ln{border-top:1px dashed var(--line)}
+.tree .w{font-weight:800}
+.tree .l{color:var(--faint)}
+.tree .arrow{color:var(--faint);font-size:.75rem}
+/* ===== أزرار ===== */
+.btn{
+  display:block;width:100%;padding:13px;border:none;border-radius:12px;font-size:.95rem;font-weight:800;
+  cursor:pointer;background:var(--green);color:#062014;margin:14px 0;
+}
+.btn.ghost{background:var(--surface2);color:var(--muted);border:1px solid var(--line)}
+.btn:disabled{opacity:.4}
+.lockmsg{text-align:center;color:var(--muted);font-size:.85rem;padding:40px 20px}
+.lockmsg .ic{font-size:2rem;display:block;margin-bottom:8px}
+.toolbar{display:flex;gap:10px}
+.toolbar .btn{flex:1}
+.toast{
+  position:fixed;bottom:18px;right:50%;transform:translateX(50%);background:var(--ink);color:var(--bg);
+  padding:10px 18px;border-radius:999px;font-size:.85rem;font-weight:700;z-index:60;opacity:0;transition:opacity .25s;pointer-events:none;
+}
+.toast.show{opacity:1}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <h1>متنبئ <span class="gold">مونديال ٢٠٢٦</span></h1>
+      <div class="prog" id="hdrProg"></div>
+    </div>
+    <nav id="nav"></nav>
+  </header>
+  <main id="main"></main>
+  <div class="toast" id="toast"></div>
+</div>
+<script>
+const ANNEX_C={"ABCDEFGH":"HGBCAFDE","ABCDEFGI":"CGBDAFEI","ABCDEFGJ":"CGBDAFEJ","ABCDEFGK":"CGBDAFEK","ABCDEFGL":"CGBDAFLE","ABCDEFHI":"HEBCAFDI","ABCDEFHJ":"HJBCAFDE","ABCDEFHK":"HEBCAFDK","ABCDEFHL":"HFBCADLE","ABCDEFIJ":"CJBDAFEI","ABCDEFIK":"CEBDAFIK","ABCDEFIL":"CEBDAFLI","ABCDEFJK":"CJBDAFEK","ABCDEFJL":"CJBDAFLE","ABCDEFKL":"CEBDAFLK","ABCDEGHI":"HGBCADEI","ABCDEGHJ":"HGBCADEJ","ABCDEGHK":"HGBCADEK","ABCDEGHL":"HGBCADLE","ABCDEGIJ":"EGBCADIJ","ABCDEGIK":"EGBCADIK","ABCDEGIL":"EGBCADLI","ABCDEGJK":"EGBCADJK","ABCDEGJL":"EGBCADLJ","ABCDEGKL":"EGBCADLK","ABCDEHIJ":"HJBCADEI","ABCDEHIK":"HEBCADIK","ABCDEHIL":"HEBCADLI","ABCDEHJK":"HJBCADEK","ABCDEHJL":"HJBCADLE","ABCDEHKL":"HEBCADLK","ABCDEIJK":"EJBCADIK","ABCDEIJL":"EJBCADLI","ABCDEIKL":"EIBCADLK","ABCDEJKL":"EJBCADLK","ABCDFGHI":"HGBCAFDI","ABCDFGHJ":"HGBCAFDJ","ABCDFGHK":"HGBCAFDK","ABCDFGHL":"CGBDAFLH","ABCDFGIJ":"CGBDAFIJ","ABCDFGIK":"CGBDAFIK","ABCDFGIL":"CGBDAFLI","ABCDFGJK":"CGBDAFJK","ABCDFGJL":"CGBDAFLJ","ABCDFGKL":"CGBDAFLK","ABCDFHIJ":"HJBCAFDI","ABCDFHIK":"HFBCADIK","ABCDFHIL":"HFBCADLI","ABCDFHJK":"HJBCAFDK","ABCDFHJL":"CJBDAFLH","ABCDFHKL":"HFBCADLK","ABCDFIJK":"CJBDAFIK","ABCDFIJL":"CJBDAFLI","ABCDFIKL":"CIBDAFLK","ABCDFJKL":"CJBDAFLK","ABCDGHIJ":"HGBCADIJ","ABCDGHIK":"HGBCADIK","ABCDGHIL":"HGBCADLI","ABCDGHJK":"HGBCADJK","ABCDGHJL":"HGBCADLJ","ABCDGHKL":"HGBCADLK","ABCDGIJK":"CJBDAGIK","ABCDGIJL":"CJBDAGLI","ABCDGIKL":"IGBCADLK","ABCDGJKL":"CJBDAGLK","ABCDHIJK":"HJBCADIK","ABCDHIJL":"HJBCADLI","ABCDHIKL":"HIBCADLK","ABCDHJKL":"HJBCADLK","ABCDIJKL":"IJBCADLK","ABCEFGHI":"HGBCAFEI","ABCEFGHJ":"HGBCAFEJ","ABCEFGHK":"HGBCAFEK","ABCEFGHL":"HGBCAFLE","ABCEFGIJ":"EGBCAFIJ","ABCEFGIK":"EGBCAFIK","ABCEFGIL":"EGBCAFLI","ABCEFGJK":"EGBCAFJK","ABCEFGJL":"EGBCAFLJ","ABCEFGKL":"EGBCAFLK","ABCEFHIJ":"HJBCAFEI","ABCEFHIK":"HEBCAFIK","ABCEFHIL":"HEBCAFLI","ABCEFHJK":"HJBCAFEK","ABCEFHJL":"HJBCAFLE","ABCEFHKL":"HEBCAFLK","ABCEFIJK":"EJBCAFIK","ABCEFIJL":"EJBCAFLI","ABCEFIKL":"EIBCAFLK","ABCEFJKL":"EJBCAFLK","ABCEGHIJ":"HJBCAGEI","ABCEGHIK":"EGBCAHIK","ABCEGHIL":"EGBCAHLI","ABCEGHJK":"HJBCAGEK","ABCEGHJL":"HJBCAGLE","ABCEGHKL":"EGBCAHLK","ABCEGIJK":"EJBCAGIK","ABCEGIJL":"EJBCAGLI","ABCEGIKL":"EGBAICLK","ABCEGJKL":"EJBCAGLK","ABCEHIJK":"EJBCAHIK","ABCEHIJL":"EJBCAHLI","ABCEHIKL":"EIBCAHLK","ABCEHJKL":"EJBCAHLK","ABCEIJKL":"EJBAICLK","ABCFGHIJ":"HGBCAFIJ","ABCFGHIK":"HGBCAFIK","ABCFGHIL":"HGBCAFLI","ABCFGHJK":"HGBCAFJK","ABCFGHJL":"HGBCAFLJ","ABCFGHKL":"HGBCAFLK","ABCFGIJK":"CJBFAGIK","ABCFGIJL":"CJBFAGLI","ABCFGIKL":"IGBCAFLK","ABCFGJKL":"CJBFAGLK","ABCFHIJK":"HJBCAFIK","ABCFHIJL":"HJBCAFLI","ABCFHIKL":"HIBCAFLK","ABCFHJKL":"HJBCAFLK","ABCFIJKL":"IJBCAFLK","ABCGHIJK":"HJBCAGIK","ABCGHIJL":"HJBCAGLI","ABCGHIKL":"IGBCAHLK","ABCGHJKL":"HJBCAGLK","ABCGIJKL":"IJBCAGLK","ABCHIJKL":"IJBCAHLK","ABDEFGHI":"HGBDAFEI","ABDEFGHJ":"HGBDAFEJ","ABDEFGHK":"HGBDAFEK","ABDEFGHL":"HGBDAFLE","ABDEFGIJ":"EGBDAFIJ","ABDEFGIK":"EGBDAFIK","ABDEFGIL":"EGBDAFLI","ABDEFGJK":"EGBDAFJK","ABDEFGJL":"EGBDAFLJ","ABDEFGKL":"EGBDAFLK","ABDEFHIJ":"HJBDAFEI","ABDEFHIK":"HEBDAFIK","ABDEFHIL":"HEBDAFLI","ABDEFHJK":"HJBDAFEK","ABDEFHJL":"HJBDAFLE","ABDEFHKL":"HEBDAFLK","ABDEFIJK":"EJBDAFIK","ABDEFIJL":"EJBDAFLI","ABDEFIKL":"EIBDAFLK","ABDEFJKL":"EJBDAFLK","ABDEGHIJ":"HJBDAGEI","ABDEGHIK":"EGBDAHIK","ABDEGHIL":"EGBDAHLI","ABDEGHJK":"HJBDAGEK","ABDEGHJL":"HJBDAGLE","ABDEGHKL":"EGBDAHLK","ABDEGIJK":"EJBDAGIK","ABDEGIJL":"EJBDAGLI","ABDEGIKL":"EGBAIDLK","ABDEGJKL":"EJBDAGLK","ABDEHIJK":"EJBDAHIK","ABDEHIJL":"EJBDAHLI","ABDEHIKL":"EIBDAHLK","ABDEHJKL":"EJBDAHLK","ABDEIJKL":"EJBAIDLK","ABDFGHIJ":"HGBDAFIJ","ABDFGHIK":"HGBDAFIK","ABDFGHIL":"HGBDAFLI","ABDFGHJK":"HGBDAFJK","ABDFGHJL":"HGBDAFLJ","ABDFGHKL":"HGBDAFLK","ABDFGIJK":"FJBDAGIK","ABDFGIJL":"FJBDAGLI","ABDFGIKL":"IGBDAFLK","ABDFGJKL":"FJBDAGLK","ABDFHIJK":"HJBDAFIK","ABDFHIJL":"HJBDAFLI","ABDFHIKL":"HIBDAFLK","ABDFHJKL":"HJBDAFLK","ABDFIJKL":"IJBDAFLK","ABDGHIJK":"HJBDAGIK","ABDGHIJL":"HJBDAGLI","ABDGHIKL":"IGBDAHLK","ABDGHJKL":"HJBDAGLK","ABDGIJKL":"IJBDAGLK","ABDHIJKL":"IJBDAHLK","ABEFGHIJ":"HJBFAGEI","ABEFGHIK":"EGBFAHIK","ABEFGHIL":"EGBFAHLI","ABEFGHJK":"HJBFAGEK","ABEFGHJL":"HJBFAGLE","ABEFGHKL":"EGBFAHLK","ABEFGIJK":"EJBFAGIK","ABEFGIJL":"EJBFAGLI","ABEFGIKL":"EGBAIFLK","ABEFGJKL":"EJBFAGLK","ABEFHIJK":"EJBFAHIK","ABEFHIJL":"EJBFAHLI","ABEFHIKL":"EIBFAHLK","ABEFHJKL":"EJBFAHLK","ABEFIJKL":"EJBAIFLK","ABEGHIJK":"EJBAHGIK","ABEGHIJL":"EJBAHGLI","ABEGHIKL":"EGBAIHLK","ABEGHJKL":"EJBAHGLK","ABEGIJKL":"EJBAIGLK","ABEHIJKL":"EJBAIHLK","ABFGHIJK":"HJBFAGIK","ABFGHIJL":"HJBFAGLI","ABFGHIKL":"HGBAIFLK","ABFGHJKL":"HJBFAGLK","ABFGIJKL":"IJBFAGLK","ABFHIJKL":"HJBAIFLK","ABGHIJKL":"HJBAIGLK","ACDEFGHI":"HGECAFDI","ACDEFGHJ":"HGJCAFDE","ACDEFGHK":"HGECAFDK","ACDEFGHL":"HGFCADLE","ACDEFGIJ":"CGJDAFEI","ACDEFGIK":"CGEDAFIK","ACDEFGIL":"CGEDAFLI","ACDEFGJK":"CGJDAFEK","ACDEFGJL":"CGJDAFLE","ACDEFGKL":"CGEDAFLK","ACDEFHIJ":"HJECAFDI","ACDEFHIK":"HEFCADIK","ACDEFHIL":"HEFCADLI","ACDEFHJK":"HJECAFDK","ACDEFHJL":"HJFCADLE","ACDEFHKL":"HEFCADLK","ACDEFIJK":"CJEDAFIK","ACDEFIJL":"CJEDAFLI","ACDEFIKL":"CEIDAFLK","ACDEFJKL":"CJEDAFLK","ACDEGHIJ":"HGJCADEI","ACDEGHIK":"HGECADIK","ACDEGHIL":"HGECADLI","ACDEGHJK":"HGJCADEK","ACDEGHJL":"HGJCADLE","ACDEGHKL":"HGECADLK","ACDEGIJK":"EGJCADIK","ACDEGIJL":"EGJCADLI","ACDEGIKL":"EGICADLK","ACDEGJKL":"EGJCADLK","ACDEHIJK":"HJECADIK","ACDEHIJL":"HJECADLI","ACDEHIKL":"HEICADLK","ACDEHJKL":"HJECADLK","ACDEIJKL":"EJICADLK","ACDFGHIJ":"HGJCAFDI","ACDFGHIK":"HGFCADIK","ACDFGHIL":"HGFCADLI","ACDFGHJK":"HGJCAFDK","ACDFGHJL":"CGJDAFLH","ACDFGHKL":"HGFCADLK","ACDFGIJK":"CGJDAFIK","ACDFGIJL":"CGJDAFLI","ACDFGIKL":"CGIDAFLK","ACDFGJKL":"CGJDAFLK","ACDFHIJK":"HJFCADIK","ACDFHIJL":"HJFCADLI","ACDFHIKL":"HFICADLK","ACDFHJKL":"HJFCADLK","ACDFIJKL":"CJIDAFLK","ACDGHIJK":"HGJCADIK","ACDGHIJL":"HGJCADLI","ACDGHIKL":"HGICADLK","ACDGHJKL":"HGJCADLK","ACDGIJKL":"IGJCADLK","ACDHIJKL":"HJICADLK","ACEFGHIJ":"HGJCAFEI","ACEFGHIK":"HGECAFIK","ACEFGHIL":"HGECAFLI","ACEFGHJK":"HGJCAFEK","ACEFGHJL":"HGJCAFLE","ACEFGHKL":"HGECAFLK","ACEFGIJK":"EGJCAFIK","ACEFGIJL":"EGJCAFLI","ACEFGIKL":"EGICAFLK","ACEFGJKL":"EGJCAFLK","ACEFHIJK":"HJECAFIK","ACEFHIJL":"HJECAFLI","ACEFHIKL":"HEICAFLK","ACEFHJKL":"HJECAFLK","ACEFIJKL":"EJICAFLK","ACEGHIJK":"EGJCAHIK","ACEGHIJL":"EGJCAHLI","ACEGHIKL":"EGICAHLK","ACEGHJKL":"EGJCAHLK","ACEGIJKL":"EJICAGLK","ACEHIJKL":"EJICAHLK","ACFGHIJK":"HGJCAFIK","ACFGHIJL":"HGJCAFLI","ACFGHIKL":"HGICAFLK","ACFGHJKL":"HGJCAFLK","ACFGIJKL":"IGJCAFLK","ACFHIJKL":"HJICAFLK","ACGHIJKL":"HJICAGLK","ADEFGHIJ":"HGJDAFEI","ADEFGHIK":"HGEDAFIK","ADEFGHIL":"HGEDAFLI","ADEFGHJK":"HGJDAFEK","ADEFGHJL":"HGJDAFLE","ADEFGHKL":"HGEDAFLK","ADEFGIJK":"EGJDAFIK","ADEFGIJL":"EGJDAFLI","ADEFGIKL":"EGIDAFLK","ADEFGJKL":"EGJDAFLK","ADEFHIJK":"HJEDAFIK","ADEFHIJL":"HJEDAFLI","ADEFHIKL":"HEIDAFLK","ADEFHJKL":"HJEDAFLK","ADEFIJKL":"EJIDAFLK","ADEGHIJK":"EGJDAHIK","ADEGHIJL":"EGJDAHLI","ADEGHIKL":"EGIDAHLK","ADEGHJKL":"EGJDAHLK","ADEGIJKL":"EJIDAGLK","ADEHIJKL":"EJIDAHLK","ADFGHIJK":"HGJDAFIK","ADFGHIJL":"HGJDAFLI","ADFGHIKL":"HGIDAFLK","ADFGHJKL":"HGJDAFLK","ADFGIJKL":"IGJDAFLK","ADFHIJKL":"HJIDAFLK","ADGHIJKL":"HJIDAGLK","AEFGHIJK":"EGJFAHIK","AEFGHIJL":"EGJFAHLI","AEFGHIKL":"EGIFAHLK","AEFGHJKL":"EGJFAHLK","AEFGIJKL":"EJIFAGLK","AEFHIJKL":"EJIFAHLK","AEGHIJKL":"EJIAHGLK","AFGHIJKL":"HJIFAGLK","BCDEFGHI":"CGBDHFEI","BCDEFGHJ":"HGBCJFDE","BCDEFGHK":"CGBDHFEK","BCDEFGHL":"CGBDHFLE","BCDEFGIJ":"CGBDJFEI","BCDEFGIK":"CGBDEFIK","BCDEFGIL":"CGBDEFLI","BCDEFGJK":"CGBDJFEK","BCDEFGJL":"CGBDJFLE","BCDEFGKL":"CGBDEFLK","BCDEFHIJ":"CJBDHFEI","BCDEFHIK":"CEBDHFIK","BCDEFHIL":"CEBDHFLI","BCDEFHJK":"CJBDHFEK","BCDEFHJL":"CJBDHFLE","BCDEFHKL":"CEBDHFLK","BCDEFIJK":"CJBDEFIK","BCDEFIJL":"CJBDEFLI","BCDEFIKL":"CEBDIFLK","BCDEFJKL":"CJBDEFLK","BCDEGHIJ":"HGBCJDEI","BCDEGHIK":"EGBCHDIK","BCDEGHIL":"EGBCHDLI","BCDEGHJK":"HGBCJDEK","BCDEGHJL":"HGBCJDLE","BCDEGHKL":"EGBCHDLK","BCDEGIJK":"EGBCJDIK","BCDEGIJL":"EGBCJDLI","BCDEGIKL":"EGBCIDLK","BCDEGJKL":"EGBCJDLK","BCDEHIJK":"EJBCHDIK","BCDEHIJL":"EJBCHDLI","BCDEHIKL":"EIBCHDLK","BCDEHJKL":"EJBCHDLK","BCDEIJKL":"EJBCIDLK","BCDFGHIJ":"HGBCJFDI","BCDFGHIK":"CGBDHFIK","BCDFGHIL":"CGBDHFLI","BCDFGHJK":"HGBCJFDK","BCDFGHJL":"CGBDHFLJ","BCDFGHKL":"CGBDHFLK","BCDFGIJK":"CGBDJFIK","BCDFGIJL":"CGBDJFLI","BCDFGIKL":"CGBDIFLK","BCDFGJKL":"CGBDJFLK","BCDFHIJK":"CJBDHFIK","BCDFHIJL":"CJBDHFLI","BCDFHIKL":"CIBDHFLK","BCDFHJKL":"CJBDHFLK","BCDFIJKL":"CJBDIFLK","BCDGHIJK":"HGBCJDIK","BCDGHIJL":"HGBCJDLI","BCDGHIKL":"HGBCIDLK","BCDGHJKL":"HGBCJDLK","BCDGIJKL":"IGBCJDLK","BCDHIJKL":"HJBCIDLK","BCEFGHIJ":"HGBCJFEI","BCEFGHIK":"EGBCHFIK","BCEFGHIL":"EGBCHFLI","BCEFGHJK":"HGBCJFEK","BCEFGHJL":"HGBCJFLE","BCEFGHKL":"EGBCHFLK","BCEFGIJK":"EGBCJFIK","BCEFGIJL":"EGBCJFLI","BCEFGIKL":"EGBCIFLK","BCEFGJKL":"EGBCJFLK","BCEFHIJK":"EJBCHFIK","BCEFHIJL":"EJBCHFLI","BCEFHIKL":"EIBCHFLK","BCEFHJKL":"EJBCHFLK","BCEFIJKL":"EJBCIFLK","BCEGHIJK":"EJBCHGIK","BCEGHIJL":"EJBCHGLI","BCEGHIKL":"EGBCIHLK","BCEGHJKL":"EJBCHGLK","BCEGIJKL":"EJBCIGLK","BCEHIJKL":"EJBCIHLK","BCFGHIJK":"HGBCJFIK","BCFGHIJL":"HGBCJFLI","BCFGHIKL":"HGBCIFLK","BCFGHJKL":"HGBCJFLK","BCFGIJKL":"IGBCJFLK","BCFHIJKL":"HJBCIFLK","BCGHIJKL":"HJBCIGLK","BDEFGHIJ":"HGBDJFEI","BDEFGHIK":"EGBDHFIK","BDEFGHIL":"EGBDHFLI","BDEFGHJK":"HGBDJFEK","BDEFGHJL":"HGBDJFLE","BDEFGHKL":"EGBDHFLK","BDEFGIJK":"EGBDJFIK","BDEFGIJL":"EGBDJFLI","BDEFGIKL":"EGBDIFLK","BDEFGJKL":"EGBDJFLK","BDEFHIJK":"EJBDHFIK","BDEFHIJL":"EJBDHFLI","BDEFHIKL":"EIBDHFLK","BDEFHJKL":"EJBDHFLK","BDEFIJKL":"EJBDIFLK","BDEGHIJK":"EJBDHGIK","BDEGHIJL":"EJBDHGLI","BDEGHIKL":"EGBDIHLK","BDEGHJKL":"EJBDHGLK","BDEGIJKL":"EJBDIGLK","BDEHIJKL":"EJBDIHLK","BDFGHIJK":"HGBDJFIK","BDFGHIJL":"HGBDJFLI","BDFGHIKL":"HGBDIFLK","BDFGHJKL":"HGBDJFLK","BDFGIJKL":"IGBDJFLK","BDFHIJKL":"HJBDIFLK","BDGHIJKL":"HJBDIGLK","BEFGHIJK":"EJBFHGIK","BEFGHIJL":"EJBFHGLI","BEFGHIKL":"EGBFIHLK","BEFGHJKL":"EJBFHGLK","BEFGIJKL":"EJBFIGLK","BEFHIJKL":"EJBFIHLK","BEGHIJKL":"EJIBHGLK","BFGHIJKL":"HJBFIGLK","CDEFGHIJ":"CGJDHFEI","CDEFGHIK":"CGEDHFIK","CDEFGHIL":"CGEDHFLI","CDEFGHJK":"CGJDHFEK","CDEFGHJL":"CGJDHFLE","CDEFGHKL":"CGEDHFLK","CDEFGIJK":"CGEDJFIK","CDEFGIJL":"CGEDJFLI","CDEFGIKL":"CGEDIFLK","CDEFGJKL":"CGEDJFLK","CDEFHIJK":"CJEDHFIK","CDEFHIJL":"CJEDHFLI","CDEFHIKL":"CEIDHFLK","CDEFHJKL":"CJEDHFLK","CDEFIJKL":"CJEDIFLK","CDEGHIJK":"EGJCHDIK","CDEGHIJL":"EGJCHDLI","CDEGHIKL":"EGICHDLK","CDEGHJKL":"EGJCHDLK","CDEGIJKL":"EGICJDLK","CDEHIJKL":"EJICHDLK","CDFGHIJK":"CGJDHFIK","CDFGHIJL":"CGJDHFLI","CDFGHIKL":"CGIDHFLK","CDFGHJKL":"CGJDHFLK","CDFGIJKL":"CGIDJFLK","CDFHIJKL":"CJIDHFLK","CDGHIJKL":"HGICJDLK","CEFGHIJK":"EGJCHFIK","CEFGHIJL":"EGJCHFLI","CEFGHIKL":"EGICHFLK","CEFGHJKL":"EGJCHFLK","CEFGIJKL":"EGICJFLK","CEFHIJKL":"EJICHFLK","CEGHIJKL":"EJICHGLK","CFGHIJKL":"HGICJFLK","DEFGHIJK":"EGJDHFIK","DEFGHIJL":"EGJDHFLI","DEFGHIKL":"EGIDHFLK","DEFGHJKL":"EGJDHFLK","DEFGIJKL":"EGIDJFLK","DEFHIJKL":"EJIDHFLK","DEGHIJKL":"EJIDHGLK","DFGHIJKL":"HGIDJFLK","EFGHIJKL":"EJIFHGLK"};
+/* ===== محرك المونديال ٢٠٢٦ — نواة الحساب (بيانات مؤكدة من لائحة فيفا) ===== */
+
+const GROUPS = "ABCDEFGHIJKL".split("");
+
+/* الفرق بترتيب مواقع القرعة (1-4) داخل كل مجموعة */
+const TEAMS = {
+  A: [["MEX","المكسيك","🇲🇽"],["RSA","جنوب أفريقيا","🇿🇦"],["KOR","كوريا الجنوبية","🇰🇷"],["CZE","التشيك","🇨🇿"]],
+  B: [["CAN","كندا","🇨🇦"],["BIH","البوسنة والهرسك","🇧🇦"],["QAT","قطر","🇶🇦"],["SUI","سويسرا","🇨🇭"]],
+  C: [["BRA","البرازيل","🇧🇷"],["MAR","المغرب","🇲🇦"],["HAI","هايتي","🇭🇹"],["SCO","اسكتلندا","🏴󠁧󠁢󠁳󠁣󠁴󠁿"]],
+  D: [["USA","أمريكا","🇺🇸"],["PAR","باراغواي","🇵🇾"],["AUS","أستراليا","🇦🇺"],["TUR","تركيا","🇹🇷"]],
+  E: [["GER","ألمانيا","🇩🇪"],["CUW","كوراساو","🇨🇼"],["CIV","كوت ديفوار","🇨🇮"],["ECU","الإكوادور","🇪🇨"]],
+  F: [["NED","هولندا","🇳🇱"],["JPN","اليابان","🇯🇵"],["SWE","السويد","🇸🇪"],["TUN","تونس","🇹🇳"]],
+  G: [["BEL","بلجيكا","🇧🇪"],["EGY","مصر","🇪🇬"],["IRN","إيران","🇮🇷"],["NZL","نيوزيلندا","🇳🇿"]],
+  H: [["ESP","إسبانيا","🇪🇸"],["CPV","الرأس الأخضر","🇨🇻"],["KSA","السعودية","🇸🇦"],["URU","أوروغواي","🇺🇾"]],
+  I: [["FRA","فرنسا","🇫🇷"],["SEN","السنغال","🇸🇳"],["IRQ","العراق","🇮🇶"],["NOR","النرويج","🇳🇴"]],
+  J: [["ARG","الأرجنتين","🇦🇷"],["ALG","الجزائر","🇩🇿"],["AUT","النمسا","🇦🇹"],["JOR","الأردن","🇯🇴"]],
+  K: [["POR","البرتغال","🇵🇹"],["COD","الكونغو الديمقراطية","🇨🇩"],["UZB","أوزبكستان","🇺🇿"],["COL","كولومبيا","🇨🇴"]],
+  L: [["ENG","إنجلترا","🏴󠁧󠁢󠁥󠁮󠁧󠁿"],["CRO","كرواتيا","🇭🇷"],["GHA","غانا","🇬🇭"],["PAN","بنما","🇵🇦"]],
+};
+
+/* فهرس الفرق: code -> {name, flag, group, pos} */
+const TEAM = {};
+GROUPS.forEach(g => TEAMS[g].forEach(([c, n, f], i) => { TEAM[c] = { code: c, name: n, flag: f, group: g, pos: i }; }));
+
+/* نمط الجولات الرسمي (مؤكد من جدول فيفا): ج1: 1×2، 3×4 — ج2: 1×3، 4×2 — ج3: 4×1، 2×3 */
+const GROUP_FIXTURE_PATTERN = [[0,1,1],[2,3,1],[0,2,2],[3,1,2],[3,0,3],[1,2,3]];
+
+function groupFixtures(g) {
+  return GROUP_FIXTURE_PATTERN.map(([a, b, md], i) => ({
+    id: g + i, group: g, md,
+    home: TEAMS[g][a][0], away: TEAMS[g][b][0],
+  }));
+}
+const ALL_GROUP_MATCHES = GROUPS.flatMap(groupFixtures);
+
+/* ===== حساب الإحصائيات والترتيب وفق معايير فيفا =====
+   داخل المجموعة: النقاط ← فارق الأهداف ← الأهداف المسجلة ← المواجهات المباشرة بين
+   المتعادلين (نقاط/فارق/أهداف) ← (لعب نظيف/قرعة = حسم يدوي من المستخدم)            */
+
+function stats(teamIds, matches, scores) {
+  const s = {};
+  teamIds.forEach(t => s[t] = { pts: 0, gd: 0, gf: 0, ga: 0, w: 0, d: 0, l: 0, p: 0 });
+  for (const m of matches) {
+    const sc = scores[m.id];
+    if (!sc) continue;
+    const [hg, ag] = sc;
+    const H = s[m.home], A = s[m.away];
+    if (!H || !A) continue;
+    H.p++; A.p++; H.gf += hg; H.ga += ag; A.gf += ag; A.ga += hg;
+    H.gd = H.gf - H.ga; A.gd = A.gf - A.ga;
+    if (hg > ag) { H.pts += 3; H.w++; A.l++; }
+    else if (hg < ag) { A.pts += 3; A.w++; H.l++; }
+    else { H.pts++; A.pts++; H.d++; A.d++; }
+  }
+  return s;
+}
+
+const cmpPGG = (s) => (a, b) => (s[b].pts - s[a].pts) || (s[b].gd - s[a].gd) || (s[b].gf - s[a].gf);
+const keyPGG = (s, t) => `${s[t].pts}|${s[t].gd}|${s[t].gf}`;
+
+function clusterBy(order, keyFn) {
+  const out = [];
+  for (const t of order) {
+    const last = out[out.length - 1];
+    if (last && keyFn(last[0]) === keyFn(t)) last.push(t); else out.push([t]);
+  }
+  return out;
+}
+
+/* ترتيب مجموعة: يعيد {order, stats, unresolved:[{teams,key}]}
+   manual: خريطة key -> ترتيب يدوي محفوظ (مصفوفة أكواد) */
+function rankGroup(g, scores, manual) {
+  const ids = TEAMS[g].map(t => t[0]);
+  const matches = ALL_GROUP_MATCHES.filter(m => m.group === g);
+  const S = stats(ids, matches, scores);
+  let order = [...ids].sort(cmpPGG(S));
+  const unresolved = [];
+  const clusters = clusterBy(order, t => keyPGG(S, t));
+  const finalOrder = [];
+  for (const cl of clusters) {
+    if (cl.length === 1) { finalOrder.push(cl[0]); continue; }
+    /* مواجهات مباشرة بين المتعادلين فقط */
+    const sub = matches.filter(m => cl.includes(m.home) && cl.includes(m.away));
+    const SS = stats(cl, sub, scores);
+    let subOrder = [...cl].sort(cmpPGG(SS));
+    const subClusters = clusterBy(subOrder, t => keyPGG(SS, t));
+    for (const sc2 of subClusters) {
+      if (sc2.length === 1) { finalOrder.push(sc2[0]); continue; }
+      const key = "G:" + g + ":" + [...sc2].sort().join("-");
+      const man = manual && manual[key];
+      if (man && man.length === sc2.length && man.every(t => sc2.includes(t))) {
+        finalOrder.push(...man);
+      } else {
+        unresolved.push({ teams: sc2, key, ctx: "المجموعة " + g });
+        finalOrder.push(...sc2); /* ترتيب مؤقت */
+      }
+    }
+  }
+  return { order: finalOrder, stats: S, unresolved };
+}
+
+/* ترتيب أصحاب المركز الثالث الـ12: النقاط ← الفارق ← الأهداف ← (لعب نظيف/قرعة = يدوي) */
+function rankThirds(groupResults, scores, manual) {
+  const thirds = GROUPS.map(g => groupResults[g].order[2]);
+  const S = {};
+  for (const t of thirds) S[t] = groupResults[TEAM[t].group].stats[t];
+  let order = [...thirds].sort(cmpPGG(S));
+  const unresolved = [];
+  const finalOrder = [];
+  for (const cl of clusterBy(order, t => keyPGG(S, t))) {
+    if (cl.length === 1) { finalOrder.push(cl[0]); continue; }
+    /* التعادل يهم فقط إن كان يقطع حدود التأهل (حول المركز 8) — لكن نطلب حسمه دائمًا للدقة */
+    const key = "T3:" + [...cl].sort().join("-");
+    const man = manual && manual[key];
+    if (man && man.length === cl.length && man.every(t => cl.includes(t))) finalOrder.push(...man);
+    else { unresolved.push({ teams: cl, key, ctx: "ترتيب أصحاب المركز الثالث" }); finalOrder.push(...cl); }
+  }
+  return { order: finalOrder, stats: S, unresolved };
+}
+
+/* بنية الأدوار الإقصائية — أرقام المباريات الرسمية 73–104 */
+const R32_DEF = [
+  { n: 73, a: ["R","A"], b: ["R","B"] },
+  { n: 74, a: ["W","E"], b: ["T","E"] },
+  { n: 75, a: ["W","F"], b: ["R","C"] },
+  { n: 76, a: ["W","C"], b: ["R","F"] },
+  { n: 77, a: ["W","I"], b: ["T","I"] },
+  { n: 78, a: ["R","E"], b: ["R","I"] },
+  { n: 79, a: ["W","A"], b: ["T","A"] },
+  { n: 80, a: ["W","L"], b: ["T","L"] },
+  { n: 81, a: ["W","D"], b: ["T","D"] },
+  { n: 82, a: ["W","G"], b: ["T","G"] },
+  { n: 83, a: ["R","K"], b: ["R","L"] },
+  { n: 84, a: ["W","H"], b: ["R","J"] },
+  { n: 85, a: ["W","B"], b: ["T","B"] },
+  { n: 86, a: ["W","J"], b: ["R","H"] },
+  { n: 87, a: ["W","K"], b: ["T","K"] },
+  { n: 88, a: ["R","D"], b: ["R","G"] },
+];
+const SLOT_ORDER = ["A","B","D","E","G","I","K","L"]; /* ترتيب أعمدة جدول الملحق C */
+const KO_DEF = {
+  R16: [ {n:89,a:74,b:77},{n:90,a:73,b:75},{n:91,a:76,b:78},{n:92,a:79,b:80},
+         {n:93,a:83,b:84},{n:94,a:81,b:82},{n:95,a:86,b:88},{n:96,a:85,b:87} ],
+  QF:  [ {n:97,a:89,b:90},{n:98,a:93,b:94},{n:99,a:91,b:92},{n:100,a:95,b:96} ],
+  SF:  [ {n:101,a:97,b:98},{n:102,a:99,b:100} ],
+  F:   [ {n:104,a:101,b:102} ],
+};
+
+/* بناء دور الـ32 من نتائج المجموعات + جدول الملحق C */
+function buildR32(groupResults, thirdsResult) {
+  const q8 = thirdsResult.order.slice(0, 8);                 /* أفضل 8 ثوالث */
+  const q8groups = q8.map(t => TEAM[t].group).sort().join(""); /* مفتاح التركيبة */
+  const assign = ANNEX_C[q8groups];                          /* 8 أحرف بترتيب SLOT_ORDER */
+  const thirdOf = {}; q8.forEach(t => thirdOf[TEAM[t].group] = t);
+  const slotThird = {};
+  SLOT_ORDER.forEach((slot, i) => { slotThird[slot] = thirdOf[assign[i]]; });
+  const pick = ([kind, g]) =>
+    kind === "W" ? groupResults[g].order[0] :
+    kind === "R" ? groupResults[g].order[1] : slotThird[g];
+  return { combo: q8groups, matches: R32_DEF.map(d => ({ n: d.n, a: pick(d.a), b: pick(d.b) })) };
+}
+
+if (typeof module !== "undefined") {
+  module.exports = { GROUPS, TEAMS, TEAM, ALL_GROUP_MATCHES, groupFixtures, stats, rankGroup, rankThirds, buildR32, R32_DEF, KO_DEF, SLOT_ORDER };
+}
+
+
+/* ================= الحالة والتخزين ================= */
+const LSKEY = "wc2026_predictions_v1";
+let mem = null;
+function loadState(){
+  try{ const raw = localStorage.getItem(LSKEY); if(raw) return JSON.parse(raw); }catch(e){}
+  return mem || { scores:{}, manual:{}, ko:{}, view:"groups" };
+}
+function saveState(){
+  mem = state;
+  try{ localStorage.setItem(LSKEY, JSON.stringify(state)); }catch(e){}
+}
+let state = loadState();
+state.scores ||= {}; state.manual ||= {}; state.ko ||= {}; state.view ||= "groups";
+
+/* ================= الحساب المركزي ================= */
+let C = {};
+function recompute(){
+  C.groupResults = {}; C.unresolved = [];
+  for(const g of GROUPS){
+    const r = rankGroup(g, state.scores, state.manual);
+    C.groupResults[g] = r; C.unresolved.push(...r.unresolved);
+  }
+  C.predicted = ALL_GROUP_MATCHES.filter(m=>state.scores[m.id]).length;
+  C.groupsDone = C.predicted === 72;
+  C.thirds = C.groupsDone ? rankThirds(C.groupResults, state.scores, state.manual) : null;
+  if(C.thirds) C.unresolved.push(...C.thirds.unresolved);
+  C.ready32 = C.groupsDone && C.unresolved.length===0;
+  C.r32 = C.ready32 ? buildR32(C.groupResults, C.thirds) : null;
+
+  /* سلسلة الفائزين — اختيار غير صالح (تغيّر الطرفان) يُهمل تلقائيًا */
+  C.win = {}; C.lose = {}; C.stages = {};
+  if(C.r32){
+    C.stages.R32 = C.r32.matches.map(m=>{
+      const w = state.ko[m.n];
+      const valid = w===m.a || w===m.b;
+      if(valid){ C.win[m.n]=w; C.lose[m.n] = w===m.a? m.b : m.a; }
+      return { n:m.n, a:m.a, b:m.b, w: valid? w : null };
+    });
+    for(const st of ["R16","QF","SF","F"]){
+      C.stages[st] = KO_DEF[st].map(d=>{
+        const a = C.win[d.a], b = C.win[d.b];
+        if(!a||!b) return { n:d.n, a:null, b:null, w:null };
+        const w = state.ko[d.n]; const valid = w===a||w===b;
+        if(valid){ C.win[d.n]=w; C.lose[d.n]= w===a? b:a; }
+        return { n:d.n, a, b, w: valid? w:null };
+      });
+    }
+    /* مباراة المركز الثالث 103 */
+    const la=C.lose[101], lb=C.lose[102];
+    C.m103 = (la&&lb) ? { n:103, a:la, b:lb, w:(state.ko[103]===la||state.ko[103]===lb)? state.ko[103]:null } : null;
+    if(C.m103 && C.m103.w) C.win[103]=C.m103.w;
+  }
+  C.champion = C.win && C.win[104] ? C.win[104] : null;
+}
+
+/* ================= أدوات عرض ================= */
+const $ = s=>document.querySelector(s);
+const esc = s=>s; /* أسماء ثابتة من بياناتنا */
+const tFlag = c=>TEAM[c].flag, tName=c=>TEAM[c].name;
+const tHTML = c=>`<span class="flag">${tFlag(c)}</span><span class="nm">${tName(c)}</span>`;
+function toast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"),1900); }
+
+const STAGE_LIST = [
+  {id:"groups", label:"المجموعات"},
+  {id:"thirds", label:"الثوالث"},
+  {id:"R32", label:"دور الـ32"},
+  {id:"R16", label:"دور الـ16"},
+  {id:"QF", label:"ربع النهائي"},
+  {id:"SF", label:"نصف النهائي"},
+  {id:"F", label:"النهائي"},
+  {id:"tree", label:"الشجرة"},
+];
+function stageUnlocked(id){
+  switch(id){
+    case "groups": case "tree": return true;
+    case "thirds": return C.predicted>0;
+    case "R32": return C.ready32;
+    case "R16": return C.ready32 && C.stages.R32.every(m=>m.w);
+    case "QF":  return stageUnlocked("R16") && C.stages.R16.every(m=>m.w);
+    case "SF":  return stageUnlocked("QF") && C.stages.QF.every(m=>m.w);
+    case "F":   return stageUnlocked("SF") && C.stages.SF.every(m=>m.w);
+  }
+}
+function stageDone(id){
+  switch(id){
+    case "groups": return C.ready32;
+    case "thirds": return C.ready32;
+    case "R32": return C.ready32 && C.stages.R32.every(m=>m.w);
+    case "R16": return stageUnlocked("QF");
+    case "QF": return stageUnlocked("SF");
+    case "SF": return stageUnlocked("F");
+    case "F": return !!C.champion;
+    default: return false;
+  }
+}
+
+/* ================= التصيير ================= */
+function render(){
+  recompute();
+  /* الترويسة */
+  const koCount = C.r32 ? Object.keys(C.win).filter(n=>n!=103).length : 0;
+  $("#hdrProg").innerHTML = C.champion
+    ? `🏆 <b>${tFlag(C.champion)} ${tName(C.champion)}</b>`
+    : C.groupsDone ? `الإقصائيات <b>${koCount}</b>/31` : `المجموعات <b>${C.predicted}</b>/72`;
+  /* الشريط */
+  $("#nav").innerHTML = STAGE_LIST.map(s=>{
+    const un = stageUnlocked(s.id);
+    return `<button class="chip ${state.view===s.id?'active':''} ${un?'':'locked'}" data-v="${s.id}">
+      ${un?'':'🔒 '}${s.label}${stageDone(s.id)?'<span class="dot"></span>':''}</button>`;
+  }).join("");
+  document.querySelectorAll("#nav .chip").forEach(b=>b.onclick=()=>{
+    const v=b.dataset.v;
+    if(!stageUnlocked(v)){ toast("أكمل المرحلة السابقة أولًا"); return; }
+    state.view=v; saveState(); render(); window.scrollTo(0,0);
+  });
+  /* المحتوى */
+  const v = state.view;
+  const main = $("#main");
+  if(!stageUnlocked(v)){ state.view="groups"; saveState(); return render(); }
+  if(v==="groups") main.innerHTML = viewGroups();
+  else if(v==="thirds") main.innerHTML = viewThirds();
+  else if(v==="tree") main.innerHTML = viewTree();
+  else if(v==="F") main.innerHTML = viewFinal();
+  else main.innerHTML = viewKO(v);
+  bindEvents();
+}
+
+function tiebox(u){
+  const cur = state.manual["_tmp_"+u.key] || [];
+  return `<div class="tiebox" data-key="${u.key}">
+    <h3>تعادل كامل — ${u.ctx}</h3>
+    <p>تطابقت النقاط وفارق الأهداف والأهداف المسجلة${u.key.startsWith("G:")?" والمواجهات المباشرة":""}. وفق لائحة فيفا يُحسم ذلك باللعب النظيف ثم القرعة — وهو ما لا يمكن توقعه حسابيًا، فاختر الترتيب بنفسك بالضغط على الفرق بالتسلسل (الأول فالأعلى):</p>
+    <div class="opts">${u.teams.map(t=>{
+      const i = cur.indexOf(t);
+      return `<button class="opt ${i>-1?'picked':''}" data-t="${t}">${tFlag(t)} ${tName(t)}${i>-1?`<span class="ord">${i+1}</span>`:''}</button>`;
+    }).join("")}</div>
+    <button class="reset">إعادة الاختيار</button>
+  </div>`;
+}
+
+function viewGroups(){
+  let html = `<p class="hint">اضبط الأهداف بأزرار + و− ، واضغط على الرقم نفسه لاعتماد نتيجة ٠–٠</p>`;
+  for(const g of GROUPS){
+    const r = C.groupResults[g];
+    const ms = ALL_GROUP_MATCHES.filter(m=>m.group===g);
+    const done = ms.filter(m=>state.scores[m.id]).length;
+    html += `<div class="card"><div class="card-h"><h2>المجموعة ${g}</h2><span class="sub">${done}/6</span></div>`;
+    let lastMd = 0;
+    for(const m of ms){
+      if(m.md!==lastMd){ html += `<div class="mdlbl">الجولة ${m.md}</div>`; lastMd=m.md; }
+      const sc = state.scores[m.id];
+      const h = sc? sc[0]:0, a = sc? sc[1]:0;
+      html += `<div class="match ${sc?'touched':''}" data-m="${m.id}">
+        <div class="team">${tHTML(m.home)}</div>
+        <div class="scorebox">
+          <div class="stp"><button data-act="h+">+</button><div class="num" data-act="confirm">${sc?h:'·'}</div><button data-act="h-">−</button></div>
+          <span class="colon">:</span>
+          <div class="stp"><button data-act="a+">+</button><div class="num" data-act="confirm">${sc?a:'·'}</div><button data-act="a-">−</button></div>
+        </div>
+        <div class="team away">${tHTML(m.away)}</div>
+      </div>`;
+    }
+    /* جدول الترتيب */
+    html += `<table><tr><th></th><th style="text-align:right">الفريق</th><th>ل</th><th>ف</th><th>ت</th><th>خ</th><th>+/−</th><th>ن</th></tr>`;
+    r.order.forEach((t,i)=>{
+      const s=r.stats[t];
+      html += `<tr class="q${i+1}"><td>${i+1}</td><td class="tn">${tFlag(t)} ${tName(t)}</td><td>${s.p}</td><td>${s.w}</td><td>${s.d}</td><td>${s.l}</td><td>${s.gd>0?'+':''}${s.gd}</td><td class="pts">${s.pts}</td></tr>`;
+    });
+    html += `</table>`;
+    /* تعادلات هذه المجموعة */
+    for(const u of r.unresolved) html += tiebox(u);
+    html += `</div>`;
+  }
+  if(C.ready32) html += `<button class="btn" data-go="R32">اكتمل دور المجموعات — انتقل إلى دور الـ32 ←</button>`;
+  else if(C.groupsDone) html += `<p class="hint">⚠️ توجد تعادلات تحتاج حسمك أعلاه قبل فتح دور الـ32</p>`;
+  html += `<div class="toolbar"><button class="btn ghost" id="resetAll">مسح كل التوقعات</button></div>`;
+  return html;
+}
+
+function viewThirds(){
+  if(!C.groupsDone) {
+    const t = GROUPS.filter(g=>ALL_GROUP_MATCHES.filter(m=>m.group===g).every(m=>state.scores[m.id]));
+    return `<div class="lockmsg"><span class="ic">⏳</span>يكتمل ترتيب أصحاب المركز الثالث بعد توقع كل مباريات المجموعات (${C.predicted}/72)</div>`;
+  }
+  const th = C.thirds;
+  let html = `<div class="card"><div class="card-h"><h2>أصحاب المركز الثالث</h2><span class="sub">يتأهل أفضل 8 من 12</span></div>`;
+  th.order.forEach((t,i)=>{
+    const s = th.stats[t];
+    html += `<div class="t3row ${i<8?'':'out'}">
+      <span class="rank">${i+1}</span>
+      <span class="flag">${tFlag(t)}</span><b>${tName(t)}</b>
+      <span style="color:var(--faint);font-size:.72rem">(${TEAM[t].group})</span>
+      <span class="meta">${s.pts} ن | ${s.gd>0?'+':''}${s.gd} | ${s.gf} هدف</span>
+      <span class="badge ${i<8?'in':'out'}">${i<8?'متأهل':'خارج'}</span>
+    </div>`;
+  });
+  html += `<div class="note">الترتيب وفق لائحة فيفا: النقاط ← فارق الأهداف ← الأهداف المسجلة. تركيبة المجموعات المتأهلة تحدد المواجهات من جدول الـ495 احتمالًا (الملحق C).</div></div>`;
+  for(const u of th.unresolved) html += tiebox(u);
+  return html;
+}
+
+const KO_LABEL = {R32:"دور الـ32", R16:"دور الـ16", QF:"ربع النهائي", SF:"نصف النهائي"};
+const SRC32 = {};
+R32_DEF.forEach(d=>{
+  const lbl = x=> x[0]==="W"? `متصدر ${x[1]}` : x[0]==="R"? `وصيف ${x[1]}` : `أفضل ثالث (${x[1]})`;
+  SRC32[d.n]=[lbl(d.a),lbl(d.b)];
+});
+function koCard(m, srcA, srcB){
+  const pick = (t)=> m.w===t? "win" : (m.w? "lose":"");
+  return `<div class="card"><div class="ko" data-n="${m.n}">
+    <div class="src"><span class="mnum">المباراة ${m.n}</span><span>${srcA} × ${srcB}</span></div>
+    <div class="vs">
+      <button class="kteam ${pick(m.a)}" data-w="${m.a}">${tHTML(m.a)}<span class="chk">✓</span></button>
+      <button class="kteam ${pick(m.b)}" data-w="${m.b}">${tHTML(m.b)}<span class="chk">✓</span></button>
+    </div>
+  </div></div>`;
+}
+function viewKO(stage){
+  const list = stage==="R32" ? C.stages.R32 : C.stages[stage];
+  let html = `<p class="hint">اضغط على الفريق الذي تتوقع تجاوزه لهذا الدور</p>`;
+  for(const m of list){
+    const src = stage==="R32" ? SRC32[m.n] : [`الفائز من م${KO_DEF[stage].find(d=>d.n===m.n).a}`,`الفائز من م${KO_DEF[stage].find(d=>d.n===m.n).b}`];
+    html += koCard(m, src[0], src[1]);
+  }
+  const next = {R32:"R16",R16:"QF",QF:"SF",SF:"F"}[stage];
+  if(list.every(m=>m.w)) html += `<button class="btn" data-go="${next}">اكتمل ${KO_LABEL[stage]} — ${next==="F"?"إلى النهائي":"إلى "+KO_LABEL[next]} ←</button>`;
+  return html;
+}
+
+function viewFinal(){
+  const f = C.stages.F[0];
+  let html = "";
+  if(C.champion){
+    html += `<div class="champ"><div class="cup">🏆</div><span class="flag">${tFlag(C.champion)}</span>
+      <h2>${tName(C.champion)}</h2><p>بطل العالم ٢٠٢٦ بحسب توقعاتك — عبر ٨ مباريات من المجموعات إلى MetLife</p></div>`;
+  }
+  html += `<p class="hint">المباراة 104 — النهائي · 19 يوليو · MetLife Stadium</p>`;
+  html += koCard(f, "الفائز من م101", "الفائز من م102");
+  if(C.m103){
+    html += `<p class="hint">المباراة 103 — تحديد المركز الثالث (اختياري)</p>`;
+    html += koCard(C.m103, "خاسر م101", "خاسر م102");
+  }
+  if(C.champion) html += `<button class="btn" data-go="tree">اعرض الشجرة الكاملة ←</button>
+    <button class="btn ghost" id="copySummary">نسخ ملخص التوقعات 📋</button>`;
+  return html;
+}
+
+function viewTree(){
+  if(!C.ready32) return `<div class="lockmsg"><span class="ic">🌳</span>تظهر الشجرة بعد اكتمال توقعات المجموعات وحسم التعادلات<br>(${C.predicted}/72)</div>`;
+  let html = "";
+  if(C.champion){
+    html += `<div class="champ"><div class="cup">🏆</div><span class="flag">${tFlag(C.champion)}</span><h2>${tName(C.champion)}</h2></div>`;
+  }
+  html += `<div class="card tree">`;
+  const stageRows = [["النهائي — 19 يوليو", C.stages.F],["نصف النهائي", C.stages.SF],["ربع النهائي", C.stages.QF],["دور الـ16", C.stages.R16],["دور الـ32", C.stages.R32]];
+  for(const [lbl, list] of stageRows){
+    html += `<div class="stage-t">${lbl}</div>`;
+    for(const m of list){
+      if(!m.a){ html += `<div class="ln"><span class="mnum">م${m.n}</span><span class="l">بانتظار توقعات الدور السابق</span></div>`; continue; }
+      const ln = (t)=> `<span class="${m.w? (m.w===t?'w':'l') : ''}">${tFlag(t)} ${tName(t)}</span>`;
+      html += `<div class="ln"><span class="mnum">م${m.n}</span>${ln(m.a)}<span class="arrow">×</span>${ln(m.b)}${m.w?`<span class="arrow">←</span><span class="w">${tFlag(m.w)}</span>`:""}</div>`;
+    }
+  }
+  html += `<div class="note">تركيبة الثوالث المتأهلة: ${C.r32.combo.split("").join("، ")} — التوزيع وفق الملحق C من لائحة فيفا.</div></div>`;
+  html += `<button class="btn ghost" id="copySummary">نسخ ملخص التوقعات 📋</button>`;
+  return html;
+}
+
+/* ================= الملخص النصي ================= */
+function summaryText(){
+  let out = "🏆 توقعاتي لمونديال 2026\n";
+  if(C.champion) out += `البطل: ${tFlag(C.champion)} ${tName(C.champion)}\n`;
+  const f = C.stages.F[0];
+  if(f.a) out += `النهائي: ${tName(f.a)} × ${tName(f.b)}\n`;
+  if(C.stages.SF.every(m=>m.a)) out += `نصف النهائي: ${C.stages.SF.map(m=>tName(m.a)+"×"+tName(m.b)).join(" | ")}\n`;
+  out += `متصدرو المجموعات: ${GROUPS.map(g=>tFlag(C.groupResults[g].order[0])).join(" ")}\n`;
+  if(C.thirds) out += `الثوالث المتأهلون: ${C.thirds.order.slice(0,8).map(tFlag).join(" ")}`;
+  return out;
+}
+
+/* ================= الأحداث ================= */
+function bindEvents(){
+  /* أهداف المجموعات */
+  document.querySelectorAll(".match").forEach(el=>{
+    el.querySelectorAll("[data-act]").forEach(b=>{
+      b.onclick = ()=>{
+        const id = el.dataset.m;
+        let sc = state.scores[id] ? [...state.scores[id]] : null;
+        const act = b.dataset.act;
+        if(act==="confirm"){ if(!sc) sc=[0,0]; }
+        else{
+          if(!sc) sc=[0,0];
+          const i = act[0]==="h"?0:1, d = act[1]==="+"?1:-1;
+          sc[i] = Math.max(0, Math.min(15, sc[i]+d));
+        }
+        state.scores[id]=sc; saveState(); render();
+      };
+    });
+  });
+  /* حسم التعادل بالترتيب */
+  document.querySelectorAll(".tiebox").forEach(box=>{
+    const key = box.dataset.key;
+    box.querySelectorAll(".opt").forEach(o=>{
+      o.onclick = ()=>{
+        const t = o.dataset.t;
+        const tmp = state.manual["_tmp_"+key] || [];
+        if(tmp.includes(t)) return;
+        tmp.push(t); state.manual["_tmp_"+key]=tmp;
+        const total = box.querySelectorAll(".opt").length;
+        if(tmp.length===total){ state.manual[key]=tmp; delete state.manual["_tmp_"+key]; toast("تم حسم الترتيب ✓"); }
+        saveState(); render();
+      };
+    });
+    const rst = box.querySelector(".reset");
+    if(rst) rst.onclick = ()=>{ delete state.manual["_tmp_"+key]; delete state.manual[key]; saveState(); render(); };
+  });
+  /* اختيار فائز الإقصائيات */
+  document.querySelectorAll(".ko").forEach(el=>{
+    el.querySelectorAll(".kteam").forEach(b=>{
+      b.onclick = ()=>{ state.ko[el.dataset.n]=b.dataset.w; saveState(); render(); };
+    });
+  });
+  /* تنقّل */
+  document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>{ state.view=b.dataset.go; saveState(); render(); window.scrollTo(0,0); });
+  const cp = $("#copySummary");
+  if(cp) cp.onclick = ()=>{
+    const txt = summaryText();
+    if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(()=>toast("نُسخ الملخص ✓"), ()=>prompt("انسخ يدويًا:", txt));
+    else prompt("انسخ يدويًا:", txt);
+  };
+  const ra = $("#resetAll");
+  if(ra) ra.onclick = ()=>{ if(confirm("سيتم مسح كل توقعاتك. متأكد؟")){ state={scores:{},manual:{},ko:{},view:"groups"}; saveState(); render(); } };
+}
+
+render();
+
+/* تسجيل عامل الخدمة للعمل دون إنترنت (يعمل فقط عبر https) */
+if ("serviceWorker" in navigator && location.protocol === "https:") {
+  try { navigator.serviceWorker.register("sw.js"); } catch (e) {}
+}
+</script>
+</body>
+</html>
